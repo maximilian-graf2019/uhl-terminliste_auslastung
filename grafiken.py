@@ -32,9 +32,10 @@ arbeitsbereiche = ['Kapazität PR-Fertigung', 'Kapazität Fensterfertigung',
                    'Kapazität Türfertigung', 'Kapazität Blechfertigung', 'Kapazität Abt. Schweißen', 'Kapazität Rollen']
 caps = [100, 400, 180, 50, 80, 40]
 today = datetime.today()
+kw = today.isocalendar().week
 
 # printing the used Variables
-print(f'Es werden die Grafiken für die KW {today.isocalendar().week} erstellt.')
+print(f'Es werden die Grafiken für die KW {kw} erstellt.')
 print('Folgende Arbeitsbereiche mit maximalen Kapazitäten werden verwendet:')
 for i, ab in enumerate(arbeitsbereiche):
     print(i, '\t', caps[i], '\t', ab[10:])
@@ -125,8 +126,8 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
                 height=6,
                 aspect=2.5,
                 palette=sns.color_palette(['green', 'red']))
-    plt.title(
-        f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
+    # plt.title(
+    #      f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
     plt.ylabel('Stunden')
     plt.xlabel('Kalenderwochen')
     plt.axhline(capacity, c='gray')
@@ -157,8 +158,6 @@ for df_nr, abt in enumerate(arbeitsbereiche):
         data=dfs[df_nr].loc[dfs[df_nr].KW.isin(get_kw_names(12))],
         capacity=caps[df_nr])
 
-
-
 # creating a markdown file from the pictures
 filename_output_markdown = 'GrafikenPDF.md'
 file_to_rem = pathlib.Path(filename_output_markdown)
@@ -172,12 +171,12 @@ title = 'Übersicht Fertigung Auslastung + Kapazität'
 class PDF(FPDF):
     def header(self):
         # Arial bold 15
-        self.set_font('Arial', 'B', 15)
+        self.set_font('Arial', 'B', 16)
         # Calculate width of title and position
         w = self.get_string_width(title) + 6
         self.set_x((210 - w) / 2)
         # Title
-        self.cell(w, 9, title, 1, 1,align='L')
+        self.cell(w, 9, title, 0, 1, align='L')
         # Line break
         self.ln(10)
 
@@ -191,16 +190,31 @@ class PDF(FPDF):
         # Page number
         self.cell(0, 10, 'Seite ' + str(self.page_no()), 0, 0, 'C')
 
-
-
 pdf = PDF()
 pdf.set_title(title)
 pdf.add_page()
-images = glob.glob("./grafiken/*.png")
-print(images)
-pdf.cell(0, 5, 'Überschrift Test')
-for img in images:
-    pdf.cell(0, 5, 'Überschrift Test')
-    pdf.image(img, x=50, y=100)
+pdf.cell(0, 5, f'Pfosten-Riegel Fertigung', align='L')
+pdf.ln(10)
+pdf.image(f'grafiken/Grafik_PR-Fertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
+pdf.ln(110)
+pdf.cell(0, 5, f'Fenster Fertigung', align='L')
+pdf.image(f'grafiken/Grafik_Fensterfertigung_KW{kw}.png', x=15, y=170, w=180, h=75)
+pdf.add_page()
+pdf.cell(0, 5, f'Blech Fertigung', align='L')
+pdf.ln(10)
+pdf.image(f'grafiken/Grafik_Blechfertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
+pdf.ln(110)
+pdf.cell(0, 5, f'Schweissen Fertigung', align='L')
+pdf.ln(10)
+pdf.image(f'grafiken/Grafik_Schweissen_KW{kw}.png', x=15, y=170, w=180, h=75)
+pdf.add_page()
+pdf.cell(0, 5, f'Türen Fertigung', align='L')
+pdf.ln(10)
+pdf.image(f'grafiken/Grafik_Türfertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
+pdf.ln(110)
+pdf.cell(0, 5, f'Rollen Fertigung', align='L')
+pdf.ln(10)
+pdf.image(f'grafiken/Grafik_Rollen_KW{kw}.png', x=15, y=170, w=180, h=75)
+    
 pdf.set_author('Maximilian Graf')
 pdf.output(f'Fertigungsübersicht_{today.isocalendar().week}.pdf', 'F')
