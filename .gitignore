@@ -1,10 +1,5 @@
 .env
-
-# alle Grafiken in "grafiken"
-/grafiken/**
-
-# Alle Excel Dateien
+grafiken/**
 *.xlsx
 *.pdf
-
 GrafikenPDF.md
