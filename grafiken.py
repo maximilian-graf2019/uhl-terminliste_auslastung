@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime
 import pathlib
+from md2pdf.core import md2pdf
 
 excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
@@ -142,7 +143,7 @@ def update_markdown(file, abteilung, kw=today.isocalendar().week):
             f.write(f'# Übersicht Grafiken Fertigung für die KW {kw} \n')
             f.write('Nachfolgend finden sich die automatisch generierten Berichte über die Auslastung und Kapazität in der Fertigung. \n')
         f.write(f'## {abteilung} \n')
-        if abteilung == 'Abt. Schweißen':
+        if abteilung == 'Kapazität Abt. Schweißen':
             f.write(f'![Übersicht Fertigung](./grafiken/Grafik_Schweissen_KW{kw}.png) \n')
         else:
             f.write(
@@ -163,3 +164,9 @@ file_to_rem = pathlib.Path(filename_output_markdown)
 file_to_rem.unlink()
 for abt in arbeitsbereiche:
     update_markdown(filename_output_markdown, abt)
+
+
+pdf_output_path = f'Fertigungsübersicht_KW{today.isocalendar().week}.pdf'
+
+md2pdf(pdf_file_path=pdf_output_path,
+       md_file_path=filename_output_markdown)

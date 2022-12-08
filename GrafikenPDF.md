@@ -9,6 +9,6 @@ Nachfolgend finden sich die automatisch generierten Berichte über die Auslastun
 ## Kapazität Blechfertigung 
 ![Übersicht Fertigung](./grafiken/Grafik_Blechfertigung_KW49.png) 
 ## Kapazität Abt. Schweißen 
-![Übersicht Fertigung](./grafiken/Grafik_Abt. Schweißen_KW49.png) 
+![Übersicht Fertigung](./grafiken/Grafik_Schweissen_KW49.png) 
 ## Kapazität Rollen 
 ![Übersicht Fertigung](./grafiken/Grafik_Rollen_KW49.png) 
