@@ -176,14 +176,8 @@ class PDF(FPDF):
         # Calculate width of title and position
         w = self.get_string_width(title) + 6
         self.set_x((210 - w) / 2)
-        # Colors of frame, background and text
-        self.set_draw_color(0, 80, 180)
-        self.set_fill_color(230, 230, 0)
-        self.set_text_color(220, 50, 50)
-        # Thickness of frame (1 mm)
-        self.set_line_width(1)
         # Title
-        self.cell(w, 9, title, 1, 1, 'C', 1)
+        self.cell(w, 9, title, 1, 1,align='L')
         # Line break
         self.ln(10)
 
@@ -201,5 +195,12 @@ class PDF(FPDF):
 
 pdf = PDF()
 pdf.set_title(title)
+pdf.add_page()
+images = glob.glob("./grafiken/*.png")
+print(images)
+pdf.cell(0, 5, 'Überschrift Test')
+for img in images:
+    pdf.cell(0, 5, 'Überschrift Test')
+    pdf.image(img, x=50, y=100)
 pdf.set_author('Maximilian Graf')
-pdf.output('fertigung.pdf', 'F')
+pdf.output(f'Fertigungsübersicht_{today.isocalendar().week}.pdf', 'F')

@@ -1,1 +1,10 @@
 .env
+
+# alle Grafiken in "grafiken"
+/grafiken/*.png
+
+# Alle Excel Dateien
+*.xlsx
+*.pdf
+
+GrafikenPDF.md
