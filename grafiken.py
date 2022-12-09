@@ -3,8 +3,6 @@ import glob
 import seaborn as sns
 import matplotlib.pyplot as plt
 from datetime import datetime
-import pathlib
-from md2pdf.core import md2pdf
 from fpdf import FPDF
 
 excel_files = glob.glob("*.xlsx")
@@ -12,12 +10,13 @@ file = excel_files[0]
 if len(excel_files) > 1:
     raise ValueError('Es liegen mehrere Dateien im Ordner. Bitte lösche nicht mehr benötigte Dateien.')
 
-print(f'Using file "{file}"')
+print(f'Nutze die Datei "{file}"')
 
 # get files and read first excel into df
 excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
 df = pd.read_excel(file)
+print('Excel erfolgreich eingelesen.')
 
 # get relevant columns and filter dataframe
 cols = ['Auftrag'] + [col for col in df.columns if col.__contains__('KW')]
@@ -46,7 +45,7 @@ for ab in arbeitsbereiche:
     rownum = df_relevant.loc[df_relevant['Auftrag'] == ab].index
     row_nums.append(rownum[0])
 
-print(row_nums)
+print('Gefunden Startzeilen', row_nums)
 
 dfs = []
 
@@ -97,7 +96,7 @@ df_r.rename(columns={'level_0': 'KW',
 df_r.replace(449, 'Kapazität', inplace=True)
 df_r.replace(450, 'Auslastung', inplace=True)
 dfs.append(df_r)
-
+print('Dateien wie benötigt erstellt.')
 # define function to get KW-Keys
 def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.year):
     if 52 - kw - number_of_keys > 0:
@@ -138,19 +137,6 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
         plt.savefig(
             f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png')
 
-
-def update_markdown(file, abteilung, kw=today.isocalendar().week):
-    with open(file, mode='a') as f:
-        if abteilung == arbeitsbereiche[0]:
-            f.write(f'# Übersicht Grafiken Fertigung für die KW {kw} \n')
-            f.write('Nachfolgend finden sich die automatisch generierten Berichte über die Auslastung und Kapazität in der Fertigung. \n')
-        f.write(f'## {abteilung} \n')
-        if abteilung == 'Kapazität Abt. Schweißen':
-            f.write(f'![Übersicht Fertigung](./grafiken/Grafik_Schweissen_KW{kw}.png) \n')
-        else:
-            f.write(
-                f'![Übersicht Fertigung](./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png) \n')
-
 # plotting and saving using the functions
 for df_nr, abt in enumerate(arbeitsbereiche):
     plot_abteilung(
@@ -158,15 +144,9 @@ for df_nr, abt in enumerate(arbeitsbereiche):
         data=dfs[df_nr].loc[dfs[df_nr].KW.isin(get_kw_names(12))],
         capacity=caps[df_nr])
 
-# creating a markdown file from the pictures
-filename_output_markdown = 'GrafikenPDF.md'
-file_to_rem = pathlib.Path(filename_output_markdown)
-file_to_rem.unlink()
-for abt in arbeitsbereiche:
-    update_markdown(filename_output_markdown, abt)
+print('PDF wird erzeugt.')
 
 title = 'Übersicht Fertigung Auslastung + Kapazität'
-
 
 class PDF(FPDF):
     def header(self):

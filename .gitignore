@@ -3,3 +3,4 @@ grafiken/**
 *.xlsx
 *.pdf
 GrafikenPDF.md
+*.log

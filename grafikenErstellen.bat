@@ -1,2 +1,3 @@
-python3 grafiken.py
-mdpdf -o article.pdf article.md
+python grafiken.py
+
+PAUSE
