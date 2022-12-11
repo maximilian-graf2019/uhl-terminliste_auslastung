@@ -1,5 +1,3 @@
-.env
-grafiken/**
 *.xlsx
 *.pdf
 GrafikenPDF.md
