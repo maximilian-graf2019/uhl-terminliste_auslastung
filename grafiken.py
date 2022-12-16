@@ -1,9 +1,10 @@
-import pandas as pd
-import glob
-import seaborn as sns
-import matplotlib.pyplot as plt
 from datetime import datetime
 from fpdf import FPDF
+import pandas as pd
+import glob
+import os
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
@@ -17,6 +18,11 @@ excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
 df = pd.read_excel(file)
 print('Excel erfolgreich eingelesen.')
+
+# removing old files from subfolder grafiken 
+filenames = os.listdir('grafiken')
+for filename in filenames:
+    os.unlink(f'grafiken/{filename}')
 
 # get relevant columns and filter dataframe
 cols = ['Auftrag'] + [col for col in df.columns if col.__contains__('KW')]
