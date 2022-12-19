@@ -130,7 +130,7 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
                 hue='category',
                 height=6,
                 aspect=2.5,
-                palette=sns.color_palette(['green', 'red']))
+                palette=sns.color_palette(['red', 'green']))
     # plt.title(
     #      f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
     plt.ylabel('Stunden')
@@ -147,7 +147,7 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
 for df_nr, abt in enumerate(arbeitsbereiche):
     plot_abteilung(
         abteilung=abt,
-        data=dfs[df_nr].loc[dfs[df_nr].KW.isin(get_kw_names(12))],
+        data=dfs[df_nr].loc[dfs[df_nr].KW.isin(get_kw_names(26))],
         capacity=caps[df_nr])
 
 print('PDF wird erzeugt.')
