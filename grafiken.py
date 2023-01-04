@@ -58,7 +58,7 @@ dfs = []
 df_pr = df_relevant.iloc[row_nums[0]-1:row_nums[0] +
                          1].dropna(axis=1, how='all').transpose().stack().reset_index()[1:]
 df_pr.rename(columns={'level_0': 'KW',
-             'level_1': 'category', 0: 'value'}, inplace=True)
+             'level_1': 'typ', 0: 'value'}, inplace=True)
 df_pr.replace(208, 'Kapazität', inplace=True)
 df_pr.replace(207, 'Auslastung', inplace=True)
 dfs.append(df_pr)
@@ -66,7 +66,7 @@ dfs.append(df_pr)
 df_f = df_relevant.iloc[row_nums[1]-1:row_nums[1] +
                         1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
 df_f.rename(columns={'level_0': 'KW',
-            'level_1': 'category', 0: 'value'}, inplace=True)
+            'level_1': 'typ', 0: 'value'}, inplace=True)
 df_f.replace(281, 'Kapazität', inplace=True)
 df_f.replace(282, 'Auslastung', inplace=True)
 dfs.append(df_f)
@@ -74,7 +74,7 @@ dfs.append(df_f)
 df_t = df_relevant.iloc[row_nums[2]-1:row_nums[2] +
                         1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
 df_t.rename(columns={'level_0': 'KW',
-            'level_1': 'category', 0: 'value'}, inplace=True)
+            'level_1': 'typ', 0: 'value'}, inplace=True)
 df_t.replace(345, 'Kapazität', inplace=True)
 df_t.replace(346, 'Auslastung', inplace=True)
 dfs.append(df_t)
@@ -82,7 +82,7 @@ dfs.append(df_t)
 df_b = df_relevant.iloc[row_nums[3]-1:row_nums[3] +
                         1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
 df_b.rename(columns={'level_0': 'KW',
-            'level_1': 'category', 0: 'value'}, inplace=True)
+            'level_1': 'typ', 0: 'value'}, inplace=True)
 df_b.replace(391, 'Kapazität', inplace=True)
 df_b.replace(392, 'Auslastung', inplace=True)
 dfs.append(df_b)
@@ -90,7 +90,7 @@ dfs.append(df_b)
 df_s = df_relevant.iloc[row_nums[4]-1:row_nums[4] +
                         1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
 df_s.rename(columns={'level_0': 'KW',
-            'level_1': 'category', 0: 'value'}, inplace=True)
+            'level_1': 'typ', 0: 'value'}, inplace=True)
 df_s.replace(402, 'Kapazität', inplace=True)
 df_s.replace(403, 'Auslastung', inplace=True)
 dfs.append(df_s)
@@ -98,7 +98,7 @@ dfs.append(df_s)
 df_r = df_relevant.iloc[row_nums[5]-1:row_nums[5] +
                         1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
 df_r.rename(columns={'level_0': 'KW',
-            'level_1': 'category', 0: 'value'}, inplace=True)
+            'level_1': 'typ', 0: 'value'}, inplace=True)
 df_r.replace(449, 'Kapazität', inplace=True)
 df_r.replace(450, 'Auslastung', inplace=True)
 dfs.append(df_r)
@@ -122,26 +122,29 @@ def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.ye
 
 # define function to plot and save
 def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
-    sns.set(rc={'figure.figsize': (11.7, 8.27)})
+    sns.set(rc={'figure.figsize': (30, 9)}, font_scale = 1.2)
     sns.catplot(data=data,
                 kind='bar',
                 x='KW',
                 y='value',
-                hue='category',
+                hue='typ',
                 height=6,
                 aspect=2.5,
                 palette=sns.color_palette(['red', 'green']))
     # plt.title(
     #      f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
     plt.ylabel('Stunden')
+    plt.xticks(rotation=45)
     plt.xlabel('Kalenderwochen')
     plt.axhline(capacity, c='gray')
     if abteilung[10:] == 'Abt. Schweißen':
         plt.savefig(
-            f'./grafiken/Grafik_Schweissen_KW{kw}.png')
+            f'./grafiken/Grafik_Schweissen_KW{kw}.png', 
+            bbox_inches="tight")
     else:
         plt.savefig(
-            f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png')
+            f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png', 
+            bbox_inches="tight")
 
 # plotting and saving using the functions
 for df_nr, abt in enumerate(arbeitsbereiche):
@@ -158,13 +161,13 @@ class PDF(FPDF):
     def header(self):
         # Arial bold 15
         self.set_font('Arial', 'B', 16)
-        # Calculate width of title and position
-        w = self.get_string_width(title) + 6
-        self.set_x((210 - w) / 2)
-        # Title
-        self.cell(w, 9, title, 0, 1, align='L')
+        # # Calculate width of title and position
+        # w = self.get_string_width(title) + 6
+        # self.set_x((200 - w) / 2)
+        # # Title
+        # self.cell(w, 25, title, 0, 1, align='C')
         # Line break
-        self.ln(10)
+        self.ln(5)
 
     def footer(self):
         # Position at 1.5 cm from bottom
@@ -176,31 +179,26 @@ class PDF(FPDF):
         # Page number
         self.cell(0, 10, 'Seite ' + str(self.page_no()), 0, 0, 'C')
 
-pdf = PDF()
+pdf = PDF(orientation='L')
 pdf.set_title(title)
 pdf.add_page()
 pdf.cell(0, 5, f'Pfosten-Riegel Fertigung', align='L')
-pdf.ln(10)
-pdf.image(f'grafiken/Grafik_PR-Fertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
-pdf.ln(110)
+pdf.image(f'grafiken/Grafik_PR-Fertigung_KW{kw}.png', x=50, y=25, w=200, h=72)
+pdf.ln(85)
 pdf.cell(0, 5, f'Fenster Fertigung', align='L')
-pdf.image(f'grafiken/Grafik_Fensterfertigung_KW{kw}.png', x=15, y=170, w=180, h=75)
+pdf.image(f'grafiken/Grafik_Fensterfertigung_KW{kw}.png', x=50, y=115, w=200, h=72)
 pdf.add_page()
 pdf.cell(0, 5, f'Blech Fertigung', align='L')
-pdf.ln(10)
-pdf.image(f'grafiken/Grafik_Blechfertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
-pdf.ln(110)
+pdf.image(f'grafiken/Grafik_Blechfertigung_KW{kw}.png', x=50, y=25, w=200, h=72)
+pdf.ln(85)
 pdf.cell(0, 5, f'Schweissen Fertigung', align='L')
-pdf.ln(10)
-pdf.image(f'grafiken/Grafik_Schweissen_KW{kw}.png', x=15, y=170, w=180, h=75)
+pdf.image(f'grafiken/Grafik_Schweissen_KW{kw}.png', x=50, y=115, w=200, h=72)
 pdf.add_page()
 pdf.cell(0, 5, f'Türen Fertigung', align='L')
-pdf.ln(10)
-pdf.image(f'grafiken/Grafik_Türfertigung_KW{kw}.png', x=15, y=50, w=180, h=75)
-pdf.ln(110)
+pdf.image(f'grafiken/Grafik_Türfertigung_KW{kw}.png', x=50, y=25, w=200, h=72)
+pdf.ln(85)
 pdf.cell(0, 5, f'Rollen Fertigung', align='L')
-pdf.ln(10)
-pdf.image(f'grafiken/Grafik_Rollen_KW{kw}.png', x=15, y=170, w=180, h=75)
+pdf.image(f'grafiken/Grafik_Rollen_KW{kw}.png', x=50, y=115, w=200, h=72)
     
 pdf.set_author('Maximilian Graf')
 pdf.output(f'Fertigungsübersicht_{today.isocalendar().week}.pdf', 'F')
