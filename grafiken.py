@@ -51,68 +51,42 @@ for ab in arbeitsbereiche:
     rownum = df_relevant.loc[df_relevant['Auftrag'] == ab].index
     row_nums.append(rownum[0])
 
-print('Gefunden Startzeilen', row_nums)
+print('Gefunden Startzeilen', row_nums, '\n')
+print(df_relevant.head())
 
 dfs = []
 
-df_pr = df_relevant.iloc[row_nums[0]-1:row_nums[0] +
+for i, arbeitsbereich in enumerate(arbeitsbereiche):
+    df_temp = df_relevant.iloc[row_nums[i]-1:row_nums[i] +
                          1].dropna(axis=1, how='all').transpose().stack().reset_index()[1:]
-df_pr.rename(columns={'level_0': 'KW',
-             'level_1': 'typ', 0: 'value'}, inplace=True)
-df_pr.replace(208, 'Kapazität', inplace=True)
-df_pr.replace(207, 'Auslastung', inplace=True)
-dfs.append(df_pr)
+    df_temp.rename(columns={'level_0': 'KW',
+                'level_1': 'typ', 0: 'value'}, inplace=True)
+    # print(df_temp.info())
+    row_Auslastung = row_nums[i]-1
+    row_Kapazitaet = row_nums[i]
+    df_temp['typ'].replace(row_Auslastung, 'Auslastung', inplace=True)
+    df_temp['typ'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
+    dfs.append(df_temp)
 
-df_f = df_relevant.iloc[row_nums[1]-1:row_nums[1] +
-                        1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
-df_f.rename(columns={'level_0': 'KW',
-            'level_1': 'typ', 0: 'value'}, inplace=True)
-df_f.replace(281, 'Kapazität', inplace=True)
-df_f.replace(282, 'Auslastung', inplace=True)
-dfs.append(df_f)
+print('Dateien wie benötigt erstellt.', '\n')
 
-df_t = df_relevant.iloc[row_nums[2]-1:row_nums[2] +
-                        1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
-df_t.rename(columns={'level_0': 'KW',
-            'level_1': 'typ', 0: 'value'}, inplace=True)
-df_t.replace(345, 'Kapazität', inplace=True)
-df_t.replace(346, 'Auslastung', inplace=True)
-dfs.append(df_t)
-
-df_b = df_relevant.iloc[row_nums[3]-1:row_nums[3] +
-                        1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
-df_b.rename(columns={'level_0': 'KW',
-            'level_1': 'typ', 0: 'value'}, inplace=True)
-df_b.replace(391, 'Kapazität', inplace=True)
-df_b.replace(392, 'Auslastung', inplace=True)
-dfs.append(df_b)
-
-df_s = df_relevant.iloc[row_nums[4]-1:row_nums[4] +
-                        1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
-df_s.rename(columns={'level_0': 'KW',
-            'level_1': 'typ', 0: 'value'}, inplace=True)
-df_s.replace(402, 'Kapazität', inplace=True)
-df_s.replace(403, 'Auslastung', inplace=True)
-dfs.append(df_s)
-
-df_r = df_relevant.iloc[row_nums[5]-1:row_nums[5] +
-                        1].dropna(axis=1, how='all').transpose()[1:].stack().reset_index()[1:]
-df_r.rename(columns={'level_0': 'KW',
-            'level_1': 'typ', 0: 'value'}, inplace=True)
-df_r.replace(449, 'Kapazität', inplace=True)
-df_r.replace(450, 'Auslastung', inplace=True)
-dfs.append(df_r)
-print('Dateien wie benötigt erstellt.')
 # define function to get KW-Keys
 def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.year):
+    # this statement gets evaluated in every normal calendar week
     if 52 - kw - number_of_keys > 0:
-        return [str(year) + '_KW' + str(i)
-                for i in range(kw, kw + number_of_keys)]
+        if kw >= 10:
+            return [str(year) + '_KW' + str(i)
+                    for i in range(kw, kw + number_of_keys)]
+        else:
+            kws = [str(year) + '_KW0' + str(i) for i in range(1, 10)] + [str(year) + '_KW' + str(i) for i in range(10, number_of_keys - 10)]
+            return kws
+    # gets evaluated, when part of the weeks go into the next year, but no more than 10
     elif number_of_keys - 51 + kw < 10:
         kws = [str(year) + '_KW' + str(i) for i in range(kw, 53)] + \
             [str(year + 1) + '_KW0' + str(i)
              for i in range(1, number_of_keys - 51 + kw)]
         return kws
+    # get evaluated for the last weeks of the year, when weeks in next year is greater than 10
     else:
         kws = [str(year) + '_KW' + str(i) for i in range(kw, 53)] + \
             [str(year + 1) + '_KW0' + str(i) for i in range(1, 10)] + \
@@ -148,9 +122,10 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
 
 # plotting and saving using the functions
 for df_nr, abt in enumerate(arbeitsbereiche):
+    df_current = dfs[df_nr]
     plot_abteilung(
         abteilung=abt,
-        data=dfs[df_nr].loc[dfs[df_nr].KW.isin(get_kw_names(26))],
+        data=df_current.loc[df_current['KW'].isin(get_kw_names(26))],
         capacity=caps[df_nr])
 
 print('PDF wird erzeugt.')
