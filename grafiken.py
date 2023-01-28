@@ -66,7 +66,7 @@ for i, arbeitsbereich in enumerate(arbeitsbereiche):
     row_Kapazitaet = row_nums[i]
     df_temp['typ'].replace(row_Auslastung, 'Auslastung', inplace=True)
     df_temp['typ'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
-    dfs.append(df_temp)
+    dfs.append(df_temp) 
 
 print('Dateien wie benötigt erstellt.', '\n')
 
@@ -78,7 +78,7 @@ def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.ye
             return [str(year) + '_KW' + str(i)
                     for i in range(kw, kw + number_of_keys)]
         else:
-            kws = [str(year) + '_KW0' + str(i) for i in range(1, 10)] + [str(year) + '_KW' + str(i) for i in range(10, number_of_keys - 10)]
+            kws = [str(year) + '_KW0' + str(i) for i in range(1, 10)] + [str(year) + '_KW' + str(i) for i in range(10, number_of_keys)]
             return kws
     # gets evaluated, when part of the weeks go into the next year, but no more than 10
     elif number_of_keys - 51 + kw < 10:
@@ -104,7 +104,8 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
                 hue='typ',
                 height=6,
                 aspect=2.5,
-                palette=sns.color_palette(['red', 'green']))
+                hue_order=['Kapazität', 'Auslastung'],
+                palette=sns.color_palette(['green', 'red']))
     # plt.title(
     #      f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
     plt.ylabel('Stunden')
