@@ -19,8 +19,15 @@ file = excel_files[0]
 df = pd.read_excel(file)
 print('Excel erfolgreich eingelesen.')
 
+df.columns = df.columns.str.replace(' ', '')
+
 # removing old files from subfolder grafiken 
-filenames = os.listdir('grafiken')
+try:
+    filenames = os.listdir('grafiken')
+except FileNotFoundError:
+    os.mkdir('grafiken')
+    filenames = os.listdir('grafiken')
+    
 for filename in filenames:
     os.unlink(f'grafiken/{filename}')
 
@@ -60,12 +67,12 @@ for i, arbeitsbereich in enumerate(arbeitsbereiche):
     df_temp = df_relevant.iloc[row_nums[i]-1:row_nums[i] +
                          1].dropna(axis=1, how='all').transpose().stack().reset_index()[1:]
     df_temp.rename(columns={'level_0': 'KW',
-                'level_1': 'typ', 0: 'value'}, inplace=True)
+                'level_1': 'Legende', 0: 'value'}, inplace=True)
     # print(df_temp.info())
     row_Auslastung = row_nums[i]-1
     row_Kapazitaet = row_nums[i]
-    df_temp['typ'].replace(row_Auslastung, 'Auslastung', inplace=True)
-    df_temp['typ'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
+    df_temp['Legende'].replace(row_Auslastung, 'Auslastung', inplace=True)
+    df_temp['Legende'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
     dfs.append(df_temp) 
 
 print('Dateien wie benötigt erstellt.', '\n')
@@ -78,7 +85,7 @@ def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.ye
             return [str(year) + '_KW' + str(i)
                     for i in range(kw, kw + number_of_keys)]
         else:
-            kws = [str(year) + '_KW0' + str(i) for i in range(1, 10)] + [str(year) + '_KW' + str(i) for i in range(10, number_of_keys)]
+            kws = [str(year) + '_KW0' + str(i) for i in range(kw, 10)] + [str(year) + '_KW' + str(i) for i in range(10, 10 + number_of_keys)]
             return kws
     # gets evaluated, when part of the weeks go into the next year, but no more than 10
     elif number_of_keys - 51 + kw < 10:
@@ -101,7 +108,7 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
                 kind='bar',
                 x='KW',
                 y='value',
-                hue='typ',
+                hue='Legende',
                 height=6,
                 aspect=2.5,
                 hue_order=['Kapazität', 'Auslastung'],
