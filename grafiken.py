@@ -31,6 +31,9 @@ except FileNotFoundError:
 for filename in filenames:
     os.unlink(f'grafiken/{filename}')
 
+# remove whitespaces from column names
+df.rename(columns=lambda x: x.strip(), inplace=True)
+
 # get relevant columns and filter dataframe
 cols = ['Auftrag'] + [col for col in df.columns if col.__contains__('KW')]
 df_relevant = df[cols]
@@ -85,7 +88,7 @@ def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.ye
             return [str(year) + '_KW' + str(i)
                     for i in range(kw, kw + number_of_keys)]
         else:
-            kws = [str(year) + '_KW0' + str(i) for i in range(kw, 10)] + [str(year) + '_KW' + str(i) for i in range(10, 10 + number_of_keys)]
+            kws = [str(year) + '_KW0' + str(i) for i in range(kw, 10)] + [str(year) + '_KW' + str(i) for i in range(10, 10 + number_of_keys - 10 + kw)]
             return kws
     # gets evaluated, when part of the weeks go into the next year, but no more than 10
     elif number_of_keys - 51 + kw < 10:
@@ -128,6 +131,18 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
             f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png', 
             bbox_inches="tight")
 
+# get total auslastung
+def get_total_auslastung(dfs, abteilung=arbeitsbereiche):
+    totals = list()
+    for i, df in enumerate(dfs):
+        df_capacity = df.loc[(df.Legende == "Kapazität") & (df.KW.isin(get_kw_names(26)))].head(30).reset_index(drop=True)
+        sum_capacity = df_capacity['value'].sum()
+        totals.append(round(sum_capacity, 2))
+    return {abteilung : totals[i] for i, abteilung in enumerate(arbeitsbereiche)}
+
+totals = get_total_auslastung(dfs)
+print(totals)
+
 # plotting and saving using the functions
 for df_nr, abt in enumerate(arbeitsbereiche):
     df_current = dfs[df_nr]
@@ -161,26 +176,26 @@ class PDF(FPDF):
         self.set_text_color(128)
         # Page number
         self.cell(0, 10, 'Seite ' + str(self.page_no()), 0, 0, 'C')
-
+        
 pdf = PDF(orientation='L')
 pdf.set_title(title)
 pdf.add_page()
-pdf.cell(0, 5, f'Pfosten-Riegel Fertigung', align='L')
+pdf.cell(0, 5, f'Pfosten-Riegel Fertigung ({totals[arbeitsbereiche[0]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_PR-Fertigung_KW{kw}.png', x=50, y=25, w=200, h=72)
 pdf.ln(85)
-pdf.cell(0, 5, f'Fenster Fertigung', align='L')
+pdf.cell(0, 5, f'Fenster Fertigung ({totals[arbeitsbereiche[1]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_Fensterfertigung_KW{kw}.png', x=50, y=115, w=200, h=72)
 pdf.add_page()
-pdf.cell(0, 5, f'Türen Fertigung', align='L')
+pdf.cell(0, 5, f'Türen Fertigung ({totals[arbeitsbereiche[2]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_Türfertigung_KW{kw}.png', x=50, y=25, w=200, h=72)
 pdf.ln(85)
-pdf.cell(0, 5, f'Blech Fertigung', align='L')
+pdf.cell(0, 5, f'Blech Fertigung ({totals[arbeitsbereiche[3]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_Blechfertigung_KW{kw}.png', x=50, y=115, w=200, h=72)
 pdf.add_page()
-pdf.cell(0, 5, f'Schweissen Fertigung', align='L')
+pdf.cell(0, 5, f'Schweissen Fertigung ({totals[arbeitsbereiche[4]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_Schweissen_KW{kw}.png', x=50, y=25, w=200, h=72)
 pdf.ln(85)
-pdf.cell(0, 5, f'Rollen Fertigung', align='L')
+pdf.cell(0, 5, f'Rollen Fertigung ({totals[arbeitsbereiche[5]]} Std.)', align='L')
 pdf.image(f'grafiken/Grafik_Rollen_KW{kw}.png', x=50, y=115, w=200, h=72)
     
 pdf.set_author('Maximilian Graf')
