@@ -134,7 +134,7 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
 # get total auslastung
 def get_total_auslastung(dfs):
     totals = list()
-    for df in enumerate(dfs):
+    for df in dfs:
         df_capacity = df.loc[(df.Legende == "Auslastung") & (df.KW.isin(get_kw_names(26)))].reset_index(drop=True)
         print(df_capacity.shape)
         print(df_capacity.head(30))
