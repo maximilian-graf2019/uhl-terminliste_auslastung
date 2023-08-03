@@ -38,7 +38,7 @@ for filename in filenames:
 df.rename(columns=lambda x: x.strip(), inplace=True)
 
 # get relevant columns and filter dataframe
-cols = ['Auftrag'] + [col for col in df.columns if col.__contains__('KW')]
+cols = ['Bezeichnung'] + [col for col in df.columns if col.__contains__('KW')]
 df_relevant = df[cols]
 print(df_relevant.shape)
 for col in df_relevant.columns:
@@ -46,22 +46,21 @@ for col in df_relevant.columns:
     df_relevant.rename(columns={col: new_col}, inplace=True)
 
 # creating variables
-arbeitsbereiche = ['Kapazität PR-Fertigung', 'Kapazität Fensterfertigung',
-                   'Kapazität Türfertigung', 'Kapazität Blechfertigung', 'Kapazität Abt. Schweißen', 'Kapazität Rollen']
-caps = [100, 400, 180, 50, 80, 40]
+techniker = ['T. Frühwacht II', 'M.Walter I', 'J. Klausing II', 'M. Pfister I', 'G.Lindner', 'P.Albert II', 'U.Schüler III', 'M.Spehnkuch III', 'Luisa Fiore III']
+caps = [33 for el in techniker]
 today = datetime.today()
 kw = today.isocalendar().week
 
 # printing the used Variables
 print(f'Es werden die Grafiken für die KW {kw} erstellt.')
-print('Folgende Arbeitsbereiche mit maximalen Kapazitäten werden verwendet:')
-for i, ab in enumerate(arbeitsbereiche):
-    print(i, '\t', caps[i], '\t', ab[10:])
+print('Folgende Techniker mit maximalen Kapazitäten werden verwendet:')
+for i, t in enumerate(techniker):
+    print(i, '\t', caps[i], '\t', t)
 
-# create df per 'Arbeitsbereich'
+# create df per 'Techniker'
 row_nums = list()
-for ab in arbeitsbereiche:
-    rownum = df_relevant.loc[df_relevant['Auftrag'] == ab].index
+for t in techniker:
+    rownum = df_relevant.loc[df_relevant['Bezeichnung'] == t].index
     row_nums.append(rownum[0])
 
 print('Gefunden Startzeilen', row_nums, '\n')
@@ -69,7 +68,7 @@ print(df_relevant.head())
 
 dfs = []
 
-for i, arbeitsbereich in enumerate(arbeitsbereiche):
+for i, t in enumerate(techniker):
     df_temp = df_relevant.iloc[row_nums[i]-1:row_nums[i] +
                          1].dropna(axis=1, how='all').transpose().stack().reset_index()[1:]
     df_temp.rename(columns={'level_0': 'KW',
@@ -81,7 +80,7 @@ for i, arbeitsbereich in enumerate(arbeitsbereiche):
     df_temp['Legende'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
     dfs.append(df_temp) 
 
-print('Dateien wie benötigt erstellt.', '\n')
+print('Grafiken wie benötigt erstellt.', '\n')
 
 # define function to get KW-Keys
 def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.year):
@@ -108,8 +107,8 @@ def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.ye
         return kws
 
 # define function to plot and save
-def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
-    sns.set(rc={'figure.figsize': (30, 9)}, font_scale = 1.2)
+def plot_abteilung(plot_item, data, capacity, kw=today.isocalendar().week):
+    sns.set(rc={'figure.figsize': (10, 6)}, font_scale = 1.2)
     sns.catplot(data=data,
                 kind='bar',
                 x='KW',
@@ -119,20 +118,13 @@ def plot_abteilung(abteilung, data, capacity, kw=today.isocalendar().week):
                 aspect=2.5,
                 hue_order=['Kapazität', 'Auslastung'],
                 palette=sns.color_palette(['green', 'red']))
-    # plt.title(
-    #      f'Auslastung für {abteilung[10:]} in KW{kw}', size=16)
     plt.ylabel('Stunden')
     plt.xticks(rotation=45)
     plt.xlabel('Kalenderwochen')
     plt.axhline(capacity, c='gray')
-    if abteilung[10:] == 'Abt. Schweißen':
-        plt.savefig(
-            f'./grafiken/Grafik_Schweissen_KW{kw}.png', 
-            bbox_inches="tight")
-    else:
-        plt.savefig(
-            f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png', 
-            bbox_inches="tight")
+    plt.savefig(
+        f'./grafiken/Grafik_{plot_item}_KW{kw}.png', 
+        bbox_inches="tight")
 
 # get total auslastung
 def get_total_auslastung(dfs):
@@ -143,24 +135,23 @@ def get_total_auslastung(dfs):
         print(df_capacity.head(30))
         sum_capacity = df_capacity['value'].sum()
         totals.append(round(sum_capacity, 2))
-    return {abteilung : totals[i] for i, abteilung in enumerate(arbeitsbereiche)}
+    return {t : totals[i] for i, t in enumerate(techniker)}
 
 totals = get_total_auslastung(dfs)
 print(totals)
 
 # plotting and saving using the functions
-for df_nr, abt in enumerate(arbeitsbereiche):
+for df_nr, t in enumerate(techniker):
     df_current = dfs[df_nr]
     plot_abteilung(
-        abteilung=abt,
+        plot_item=t,
         data=df_current.loc[df_current['KW'].isin(get_kw_names(26))],
         capacity=caps[df_nr])
 
-print('PDF wird erzeugt.')
+print('PDF wird erzeugt.\n')
 
-title = 'Übersicht Fertigung Auslastung + Kapazität'
 
-def create_pdf_with_images(abteilung_list, output_filename):
+def create_pdf_with_images(techniker_list, output_filename):
     doc = SimpleDocTemplate(output_filename, pagesize=A4)
 
     # Prepare the list of elements for the PDF
@@ -168,23 +159,19 @@ def create_pdf_with_images(abteilung_list, output_filename):
     styles = getSampleStyleSheet()
 
     # Add title to the PDF
-    title = "Auslastung der Fertigung"
+    title = "Auslastung der Techniker"
     title_text = Paragraph(title, styles['Title'])
     elements.append(title_text)
     elements.append(Spacer(1, 20))
 
-    for i, abteilung in enumerate(abteilung_list):
+    for i, techniker in enumerate(techniker_list):
         # Create a heading for each techniker
-        heading_text = f"Kapazität: {abteilung} (Ist:{totals[abteilung]} / Soll:{caps[i]*26} Std.)"
+        heading_text = f"Techniker: {techniker}"
         heading = Paragraph(heading_text, styles['Heading2'])
         elements.append(heading)
 
         # Find and add the corresponding plot image to the PDF
-        if abteilung[10:] == 'Abt. Schweißen':
-            image_filename = f'./grafiken/Grafik_Schweissen_KW{kw}.png'
-        else:
-            image_filename = f'./grafiken/Grafik_{abteilung[10:]}_KW{kw}.png'
-
+        image_filename = f"grafiken/Grafik_{techniker}_KW{kw}.png"
         images = glob.glob(image_filename)
         if images:
             img = Image(images[0], height=200, width=500)
@@ -199,5 +186,5 @@ def create_pdf_with_images(abteilung_list, output_filename):
     doc.build(elements)
 
 # Usage example:
-output_filename = f"Fertigungsübersicht_kw{kw}.pdf"
-create_pdf_with_images(arbeitsbereiche, output_filename)
+output_filename = f"auslastung_techniker_kw{kw}.pdf"
+create_pdf_with_images(techniker, output_filename)
