@@ -1,5 +1,4 @@
 from datetime import datetime
-from fpdf import FPDF
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
 from reportlab.lib.styles import getSampleStyleSheet
@@ -8,19 +7,39 @@ import glob
 import os
 import seaborn as sns
 import matplotlib.pyplot as plt
+import logging
+
+def get_techniker(filename):
+    df_techniker = pd.read_excel(filename, sheet_name='Grafiken TB', skiprows=2, usecols=['Name', 'Std / Woche'])
+    logging.info(df_techniker.head())
+    techniker = df_techniker['Name'].tolist()
+    caps = df_techniker['Std / Woche'].tolist()
+    return techniker, caps
+
+logging.basicConfig(level=logging.INFO)
 
 excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
 if len(excel_files) > 1:
     raise ValueError('Es liegen mehrere Dateien im Ordner. Bitte lösche nicht mehr benötigte Dateien.')
 
-print(f'Nutze die Datei "{file}"')
+logging.info(f'Nutze die Datei "{file}"')
+
+# getting the techniker and caps from the excel file
+techniker, caps = get_techniker(file)
+
+# remove first elements from techniker and caps (there are words instead of numbers)
+techniker, caps = techniker[1:], caps[1:]
+
+# replacing Urlaub with 0 in caps
+caps = [0 if c == 'Urlaub' else c for c in caps]
+
 
 # get files and read first excel into df
 excel_files = glob.glob("*.xlsx")
 file = excel_files[0]
 df = pd.read_excel(file)
-print('Excel erfolgreich eingelesen.')
+logging.info('Excel erfolgreich eingelesen.')
 
 df.columns = df.columns.str.replace(' ', '')
 
@@ -38,22 +57,24 @@ for filename in filenames:
 df.rename(columns=lambda x: x.strip(), inplace=True)
 
 # get relevant columns and filter dataframe
-cols = ['Bezeichnung'] + [col for col in df.columns if col.__contains__('KW')]
+kw_cols = [col for col in df.columns if col.__contains__('KW')]
+cols = ['Bezeichnung'] + kw_cols
 df_relevant = df[cols]
-print(df_relevant.shape)
+df_relevant[kw_cols] = df_relevant[kw_cols].apply(pd.to_numeric, errors='coerce', axis=1)
+logging.info(df_relevant.shape)
 for col in df_relevant.columns:
     new_col = col.replace('\n', '_')
     df_relevant.rename(columns={col: new_col}, inplace=True)
+logging.info("DataFrame mit relevanten Spalten erstellt.\n")
+print(df_relevant.head())
 
 # creating variables
-techniker = ['T. Frühwacht II', 'M.Walter I', 'J. Klausing II', 'M. Pfister I', 'G.Lindner', 'P.Albert II', 'U.Schüler III', 'M.Spehnkuch III', 'Luisa Fiore III']
-caps = [33 for el in techniker]
 today = datetime.today()
 kw = today.isocalendar().week
 
-# printing the used Variables
-print(f'Es werden die Grafiken für die KW {kw} erstellt.')
-print('Folgende Techniker mit maximalen Kapazitäten werden verwendet:')
+# logging.infoing the used Variables
+logging.info(f'Es werden die Grafiken für die KW {kw} erstellt.')
+logging.info('Folgende Techniker mit maximalen Kapazitäten werden verwendet:')
 for i, t in enumerate(techniker):
     print(i, '\t', caps[i], '\t', t)
 
@@ -61,10 +82,11 @@ for i, t in enumerate(techniker):
 row_nums = list()
 for t in techniker:
     rownum = df_relevant.loc[df_relevant['Bezeichnung'] == t].index
+    logging.info(rownum)
     row_nums.append(rownum[0])
 
-print('Gefunden Startzeilen', row_nums, '\n')
-print(df_relevant.head())
+logging.info(f'Gefunden Startzeilen {row_nums}\n')
+logging.info(df_relevant.head())
 
 dfs = []
 
@@ -73,14 +95,14 @@ for i, t in enumerate(techniker):
                          1].dropna(axis=1, how='all').transpose().stack().reset_index()[1:]
     df_temp.rename(columns={'level_0': 'KW',
                 'level_1': 'Legende', 0: 'value'}, inplace=True)
-    # print(df_temp.info())
+    # logging.info(df_temp.info())
     row_Auslastung = row_nums[i]-1
     row_Kapazitaet = row_nums[i]
     df_temp['Legende'].replace(row_Auslastung, 'Auslastung', inplace=True)
     df_temp['Legende'].replace(row_Kapazitaet, 'Kapazität', inplace=True)
     dfs.append(df_temp) 
 
-print('Grafiken wie benötigt erstellt.', '\n')
+logging.info('Grafiken wie benötigt erstellt.\n')
 
 # define function to get KW-Keys
 def get_kw_names(number_of_keys: int, kw=today.isocalendar().week, year=today.year):
@@ -131,14 +153,12 @@ def get_total_auslastung(dfs):
     totals = list()
     for df in dfs:
         df_capacity = df.loc[(df.Legende == "Auslastung") & (df.KW.isin(get_kw_names(26)))].reset_index(drop=True)
-        print(df_capacity.shape)
-        print(df_capacity.head(30))
-        sum_capacity = df_capacity['value'].sum()
+        sum_capacity = float(df_capacity['value'].sum())
         totals.append(round(sum_capacity, 2))
     return {t : totals[i] for i, t in enumerate(techniker)}
 
 totals = get_total_auslastung(dfs)
-print(totals)
+logging.info(totals)
 
 # plotting and saving using the functions
 for df_nr, t in enumerate(techniker):
@@ -148,7 +168,7 @@ for df_nr, t in enumerate(techniker):
         data=df_current.loc[df_current['KW'].isin(get_kw_names(26))],
         capacity=caps[df_nr])
 
-print('PDF wird erzeugt.\n')
+logging.info('PDF wird erzeugt.\n')
 
 
 def create_pdf_with_images(techniker_list, output_filename):

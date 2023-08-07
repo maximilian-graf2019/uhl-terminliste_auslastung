@@ -1,7 +1,5 @@
-fpdf==1.7.2
-matplotlib==3.5.2
-pandas==1.4.3
-seaborn==0.11.2
+matplotlib
+pandas
+seaborn
 openpyxl
-mdpdf
-reportlabs
+reportlab
