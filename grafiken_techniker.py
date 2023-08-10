@@ -28,8 +28,14 @@ logging.info(f'Nutze die Datei "{file}"')
 # getting the techniker and caps from the excel file
 techniker, caps = get_techniker(file)
 
+# modify techniker to get the correct indexes
+techniker.append("Fremdleistung TB")
+caps.append(0)
+print(f"Gefundene Techniker: {techniker}, mit Kapazitäten: {caps}")
+
+
 # remove first elements from techniker and caps (there are words instead of numbers)
-techniker, caps = techniker[1:], caps[1:]
+# techniker, caps = techniker[1:], caps[1:]
 
 # replacing Urlaub with 0 in caps
 caps = [0 if c == 'Urlaub' else c for c in caps]
@@ -84,6 +90,17 @@ for t in techniker:
     rownum = df_relevant.loc[df_relevant['Bezeichnung'] == t].index
     logging.info(rownum)
     row_nums.append(rownum[0])
+
+# remove the first rownum, because the values for each techniker are at the start of the next technikers row
+row_nums = row_nums[1:]
+
+# remove last element from caps and techniker
+caps = caps[:-1]
+techniker = techniker[:-1]
+
+# ensuring, row_nums is correct length
+assert len(row_nums) == len(caps)
+assert len(row_nums) == len(techniker)
 
 logging.info(f'Gefunden Startzeilen {row_nums}\n')
 logging.info(df_relevant.head())
